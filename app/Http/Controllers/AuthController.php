@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\JWTToken;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -32,12 +33,10 @@ class AuthController extends Controller
             $user->lastname = $request->lastname;
             $user->email = $request->email;
             $user->mobile = $request->mobile;
-            $user->password = bcrypt($request->password);
+            $user->password = Hash::make($request->password);
             $user->otp = $request->otp;
             $user->save();
 
-            // Generate and return JWT token
-            $token = JWTToken::createToken(['user_id' => $user->id, 'user_email' => $user->email]);
             return response()->json([
                 'status' => 'success',
                 'message' => 'User Registration Successfull',
@@ -64,7 +63,7 @@ class AuthController extends Controller
             $user = User::where('email', $request->email)->first();
 
             // Check if user exists and verify password
-            if (!$user || !password_verify($request->password, $user->password)) {
+            if (!$user || !Hash::check($request->password, $user->password)) {
                 return response()->json(['error' => 'Invalid credentials'], 401);
             }
 
